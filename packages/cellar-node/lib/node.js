@@ -316,7 +316,6 @@ class Node {
 
     const latestRecord = this.#getAppendEntriesPayload(follower);
     return ['term', 'prevLogIndex', 'prevLogTerm'].reduce((stale, key) => {
-
       if (stale) return stale;
 
       return latestRecord[key] !== request[key];
@@ -391,7 +390,7 @@ class Node {
         return debug(this.#getAppendEntriesResponse(false));
 
       if (!this.isFollower()) {
-        if (request.term > this.#currentTerm) {
+        if (request.term > this.#currentTerm || (request.leaderCommit > this.#commitIndex && this.isCandidate())) {
           const response = debug(this.#acceptEntries(request));
           this.#switchToFollowerMode();
 
