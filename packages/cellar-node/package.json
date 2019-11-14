@@ -1,0 +1,16 @@
+{
+  "name": "cellar-node",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "repository": "https://github.com/hereisnaman/cellar",
+  "author": "Naman Kumar <naman@outlook.in>",
+  "license": "MIT",
+  "private": false,
+  "devDependencies": {
+    "dotenv": "^8.2.0"
+  },
+  "dependencies": {
+    "@grpc/proto-loader": "^0.5.3",
+    "grpc": "^1.24.2"
+  }
+}
