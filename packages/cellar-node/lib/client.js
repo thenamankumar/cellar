@@ -3,6 +3,7 @@ const services = require('./services');
 const RPCService = require('./utils').RPCService;
 
 class Client {
+  #id;
   #address;
   #services;
 
@@ -16,10 +17,10 @@ class Client {
   }
 
   get id() {
-    return this.requestStatus().then(status => (status ? status.id : undefined));
+    return this.#id ? this.#id : this.requestStatus().then(status => (status ? status.id : undefined));
   }
 
-  kill = RPCService((...args) => this.#services.kill({}, ...args), {
+  kill = RPCService((payload, ...args) => this.#services.kill({}, ...args), {
     defaults: {},
   });
 
@@ -29,6 +30,8 @@ class Client {
       if (err) throw err;
 
       if (response === null) return null;
+
+      this.#id = response.id;
 
       return {
         ...response,

@@ -1,0 +1,21 @@
+.NodeBox {
+  padding: 10px;
+  margin-bottom: 40px;
+}
+
+.NodeContent {
+  padding: 20px;
+  border-width: 4px;
+  height: 100%;
+}
+
+.NodeDetails {
+  padding: 0 20px;
+  margin-top: 10px;
+}
+
+.NodeDetailPoint::after {
+  content: ':';
+  position: absolute;
+  right: 0;
+}

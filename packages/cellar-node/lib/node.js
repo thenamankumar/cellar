@@ -46,7 +46,7 @@ class Node {
       kill: (_, done) => {
         done(null, {});
 
-        process.exit();
+        process.exit(0);
       },
       requestStatus: RPCController(() => this.status),
       set: this.#setValue,
@@ -63,7 +63,7 @@ class Node {
     });
 
     this.#connectionTimer = new Timer(
-      () => 150 + Math.random() * 200,
+      () => 200 + Math.random() * 200,
       this.#switchToCandidateMode,
       getTimerCallbacks('connetion'),
     );
@@ -415,8 +415,6 @@ class Node {
   #acceptEntries = request => {
     if (this.isFollower() || request.term > this.#currentTerm) {
       this.#votedFor = request.leaderId;
-    }
-    if (request.term > this.#currentTerm) {
       this.#leaderId = request.leaderId;
     }
     this.#currentTerm = request.term;
@@ -460,7 +458,16 @@ class Node {
 
   /* Get Controller Start*/
   #getValue = RPCController(request => {
-    if (!this.isLeader()) return this.#getStateValueResponse(undefined, false);
+    if (!this.isLeader()) {
+      const response = this.#getStateValueResponse(undefined, false);
+      this.#debug('GET Value', request, response);
+
+      return response;
+    }
+
+    const value = this.#state.get(request.key);
+
+    return this.#getStateValueResponse(value, true);
   });
   /* Get Controller End*/
 
@@ -479,7 +486,7 @@ class Node {
   #setLog = async (request, log) => {
     if (!this.isLeader()) {
       const response = this.#getSuccessValueResponse(false);
-      this.#debug('Set Value', request, response);
+      this.#debug(`${log.action} Value`, request, response);
 
       return response;
     }

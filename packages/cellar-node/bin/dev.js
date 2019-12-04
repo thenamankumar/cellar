@@ -38,6 +38,7 @@ setTimeout(async () => {
   );
 
   setInterval(() => {
+    return;
     clients.forEach(async client => {
       const status = await client.requestStatus();
       if (!status) return console.log(`${client.address} unreachable.`);
@@ -48,15 +49,19 @@ setTimeout(async () => {
     console.log('\n\n');
   }, 1000);
 
+  let leader = null;
   const getRandomClient = () => clients[Math.floor(Math.random() * clients.length)];
 
-  const setValue = async (action, key, value, client = getRandomClient()) => {
+  const setValue = async (action, key, value, client = leader || getRandomClient()) => {
     console.log('retrying');
-    const response = action === 'set' ? await client.set({ key, value }) : await client.remove({ key });
-    console.log('response', response, await client.id);
+    const response = await client[action]({ key, value });
+    console.log('response', action, response, await client.id);
 
-    if (response.success) return response;
-    if (response.leaderId !== null) {
+    if (response.success) {
+      leader = client;
+      return response;
+    }
+    if (response.leaderId !== null && action !== 'get') {
       const newLeader =
         clients[
           (await Promise.all(clients.map(async _client => await _client.id))).findIndex(id => {
@@ -74,6 +79,9 @@ setTimeout(async () => {
 
   if (1) {
     await setValue('set', 'c', 'a');
+    await setValue('get', 'c');
     await setValue('remove', 'c');
+    await setValue('get', 'c');
+    await setValue('set', 'c', 'a');
   }
 }, 1000);
