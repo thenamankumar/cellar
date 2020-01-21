@@ -330,16 +330,6 @@ class Node {
     request => {
       if (request.term < this.#currentTerm) return this.#getVoteResponse(request, false);
 
-      if (!this.isFollower()) {
-        if (request.term > this.#currentTerm) {
-          this.#debug('granting vote to newer candidate', this.isFollower(), request.term > this.#currentTerm);
-          const vote = this.#grantVote(request);
-          this.#switchToFollowerMode();
-
-          return vote;
-        } else return this.#getVoteResponse(request, false);
-      }
-
       const lastLog = this.#logs[this.#logs.length - 1] || new Log();
       if (lastLog.term > request.lastLogTerm || this.#logs.length - 1 > request.lastLogIndex)
         return this.#getVoteResponse(request, false);
@@ -347,8 +337,17 @@ class Node {
       if (
         (request.term > this.#currentTerm && this.#logs.length - 1 <= request.lastLogIndex) ||
         (request.term === this.#currentTerm && this.isFollower() && this.#votedFor === null)
-      )
+      ) {
+        if (!this.isFollower() && request.term > this.#currentTerm) {
+          this.#debug('granting vote to newer candidate', this.isFollower(), request.term > this.#currentTerm);
+          const vote = this.#grantVote(request);
+          this.#switchToFollowerMode();
+
+          return vote;
+        }
+
         return this.#grantVote(request);
+      }
 
       return this.#getVoteResponse(request, false);
     },
@@ -386,6 +385,10 @@ class Node {
 
       if (request.term < this.#currentTerm) return debug(this.#getAppendEntriesResponse(false));
 
+      /*
+      if (request.term == this.#currentTerm && this.#votedFor != request.leaderId)
+        return debug(this.#getAppendEntriesResponse(false));
+        */
       if ((this.#logs[request.prevLogIndex] || new Log()).term !== request.prevLogTerm)
         return debug(this.#getAppendEntriesResponse(false));
 
